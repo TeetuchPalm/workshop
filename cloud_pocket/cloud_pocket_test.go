@@ -74,7 +74,7 @@ func TestGetOne(t *testing.T) {
 
 	for _, tc := range testcases {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(tc.reqBody))
+		req := httptest.NewRequest(http.MethodGet, endpoint, strings.NewReader(tc.reqBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
@@ -175,7 +175,7 @@ func TestGetOne_Error(t *testing.T) {
 
 	for _, tc := range testcases {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(tc.reqBody))
+		req := httptest.NewRequest(http.MethodGet, endpoint, strings.NewReader(tc.reqBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
