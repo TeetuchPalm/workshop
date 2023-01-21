@@ -1,7 +1,6 @@
 package cloud_pocket
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 	"time"
@@ -37,15 +36,7 @@ type CloudPocket struct {
 	DeletedAt *time.Time `json:"-"`
 }
 
-type handler struct {
-	db *sql.DB
-}
-
-func New(db *sql.DB) *handler {
-	return &handler{db}
-}
-
-func (h *handler) Get(c echo.Context) error {
+func (h *handler) GetOne(c echo.Context) error {
 	logger := mlog.L(c)
 	ctx := c.Request().Context()
 	pocketID := c.Param(cID)

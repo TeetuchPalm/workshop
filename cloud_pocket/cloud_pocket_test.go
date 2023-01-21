@@ -16,7 +16,7 @@ import (
 
 const endpoint = "/cloud_pocket"
 
-func TestGet(t *testing.T) {
+func TestGetOne(t *testing.T) {
 	testcases := []struct {
 		name       string
 		id         string
@@ -86,14 +86,14 @@ func TestGet(t *testing.T) {
 		h := New(db)
 
 		assert.NoError(t, err)
-		if assert.NoError(t, h.Get(c)) {
+		if assert.NoError(t, h.GetOne(c)) {
 			assert.Equal(t, tc.wantStatus, rec.Code)
 			assert.JSONEq(t, tc.wantBody, rec.Body.String())
 		}
 	}
 }
 
-func TestGet_Error(t *testing.T) {
+func TestGetOne_Error(t *testing.T) {
 	testcases := []struct {
 		name       string
 		id         string
@@ -187,7 +187,7 @@ func TestGet_Error(t *testing.T) {
 		h := New(db)
 
 		assert.NoError(t, err)
-		if assert.NoError(t, h.Get(c)) {
+		if assert.NoError(t, h.GetOne(c)) {
 			assert.Equal(t, tc.wantStatus, rec.Code)
 		}
 	}
