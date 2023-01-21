@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/kkgo-software-engineering/workshop/account"
+	cpk "github.com/kkgo-software-engineering/workshop/cloud_pocket"
 	"github.com/kkgo-software-engineering/workshop/config"
 	"github.com/kkgo-software-engineering/workshop/featflag"
 	"github.com/kkgo-software-engineering/workshop/healthchk"
@@ -32,6 +33,9 @@ func RegRoute(cfg config.Config, logger *zap.Logger, db *sql.DB) *echo.Echo {
 
 	hFeatFlag := featflag.New(cfg)
 	e.GET("/features", hFeatFlag.List)
+
+	hCloudPocket := cpk.New(db)
+	e.POST("/cloud_pockets/:id", hCloudPocket.Get)
 
 	return e
 }
