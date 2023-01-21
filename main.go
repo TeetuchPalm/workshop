@@ -16,6 +16,16 @@ import (
 
 	_ "github.com/lib/pq"
 )
+func SetupPocketDB(db *sql.DB) {
+	createTb := `
+	CREATE TABLE IF NOT EXISTS pockets (id SERIAL PRIMARY KEY, name TEXT, category TEXT, amount FLOAT, goal FLOAT, currency TEXT, createdAt TIMESTAMP, updatedAt TIMESTAMP, deletedAt TIMESTAMP);
+	`
+	_, err := db.Exec(createTb)
+
+	if err != nil {
+		log.Fatal("can't create table", err)
+	}
+}
 
 func main() {
 	cfg := config.New().All()
@@ -29,6 +39,8 @@ func main() {
 	if err != nil {
 		logger.Fatal("unable to configure database", zap.Error(err))
 	}
+
+	SetupPocketDB(sql)
 
 	e := router.RegRoute(cfg, logger, sql)
 
