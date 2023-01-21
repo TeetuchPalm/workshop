@@ -5,3 +5,15 @@ CREATE TABLE "accounts" (
     "balance" float8 NOT NULL DEFAULT 0,
     PRIMARY KEY ("id")
 );
+
+CREATE TABLE IF NOT EXISTS transactions(
+					id SERIAL PRIMARY KEY,
+					`type` TEXT,
+					`status` FLOAT,
+					souecePocketId TEXT,
+					destinationPocketID TEXT,
+                    `description` TEXT,
+                    amount FLOAT,
+                    currency TEXT,
+                    createdAt timestamp,
+                    );
