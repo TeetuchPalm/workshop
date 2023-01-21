@@ -4,7 +4,6 @@ package transaction
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -17,10 +16,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetTransactionById(t *testing.T) {
+func TestGetTransactionByPocketId(t *testing.T) {
 	//arrange
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/transactions/:id", nil)
+	req := httptest.NewRequest(http.MethodGet, "/:id/transactions", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -30,11 +29,7 @@ func TestGetTransactionById(t *testing.T) {
 
 	var mock sqlmock.Sqlmock
 	var err error
-	ti, err := time.Parse("2021-09-01T00:00:00Z", "2001-09-28T01:00:00Z")
-
-	if err != nil {
-		fmt.Println(err)
-	}
+	ti, _ := time.Parse("2021-09-01T00:00:00Z", "2001-09-28T01:00:00Z")
 	md := Transaction{
 		ID:                  1,
 		Type:                "deposit",
@@ -46,7 +41,7 @@ func TestGetTransactionById(t *testing.T) {
 		Currency:            "THB",
 		CreatedAt:           ti,
 	}
-	rt := Transaction{}
+	rt := []Transaction{}
 
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -54,7 +49,7 @@ func TestGetTransactionById(t *testing.T) {
 	}
 	defer db.Close()
 
-	prep := mock.ExpectPrepare(regexp.QuoteMeta(`SELECT * FROM transactions WHERE id = $1`))
+	prep := mock.ExpectPrepare(regexp.QuoteMeta(`SELECT * FROM transactions WHERE sourcePocketId = $1 OR destinationPocketId = $1 ORDER BY id`))
 
 	prep.ExpectQuery().
 		WithArgs("1").
@@ -62,21 +57,22 @@ func TestGetTransactionById(t *testing.T) {
 
 	//action
 	h := New(db)
-	err = h.GetTransactionById(c)
+	err = h.GetTransactionByPocketId(c)
 	assert.Nil(t, err)
 	err = json.NewDecoder(rec.Body).Decode(&rt)
 
 	//assert
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
-	assert.Equal(t, 1, rt.ID)
-	assert.Equal(t, TransactionType("deposit"), rt.Type)
-	assert.Equal(t, TransactionStatus("success"), rt.Status)
-	assert.Equal(t, 1, rt.SourcePocketID)
-	assert.Equal(t, 2, rt.DestinationPocketID)
-	assert.Equal(t, "", rt.Description)
-	assert.Equal(t, float64(10), rt.Amount)
-	assert.Equal(t, cloud_pocket.Currency("THB"), rt.Currency)
-	assert.Equal(t, ti, rt.CreatedAt)
+	assert.Greater(t, len(rt), 0)
+	assert.Equal(t, 1, rt[0].ID)
+	assert.Equal(t, TransactionType("deposit"), rt[0].Type)
+	assert.Equal(t, TransactionStatus("success"), rt[0].Status)
+	assert.Equal(t, 1, rt[0].SourcePocketID)
+	assert.Equal(t, 2, rt[0].DestinationPocketID)
+	assert.Equal(t, "", rt[0].Description)
+	assert.Equal(t, float64(10), rt[0].Amount)
+	assert.Equal(t, cloud_pocket.Currency("THB"), rt[0].Currency)
+	assert.Equal(t, ti, rt[0].CreatedAt)
 
 }

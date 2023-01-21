@@ -39,7 +39,7 @@ func RegRoute(cfg config.Config, logger *zap.Logger, db *sql.DB) *echo.Echo {
 	e.GET("/cloud-pockets/:id", hCloudPocket.GetOne)
 
 	hTransaction := ctr.New(db)
-	e.GET("/cloud_pockets/transactions/:id", hTransaction.GetTransactionById)
+	e.GET("/cloud_pockets/:id/transactions", hTransaction.GetTransactionByPocketId)
 
 	return e
 }
