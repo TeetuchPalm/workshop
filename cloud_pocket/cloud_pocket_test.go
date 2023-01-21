@@ -55,7 +55,7 @@ func TestGetOne(t *testing.T) {
 					"2021-09-01T00:00:00Z",
 					nil,
 				)
-				mock.ExpectQuery(cGetStmt).WithArgs("1").WillReturnRows(row)
+				mock.ExpectQuery(cGetOneStmt).WithArgs("1").WillReturnRows(row)
 				return db, err
 			},
 			wantStatus: http.StatusOK,
@@ -131,7 +131,7 @@ func TestGetOne_Error(t *testing.T) {
 					"2021-09-01T00:00:00Z",
 					nil,
 				)
-				mock.ExpectQuery(cGetStmt).WithArgs("1").WillReturnRows(row)
+				mock.ExpectQuery(cGetOneStmt).WithArgs("1").WillReturnRows(row)
 				return db, err
 			},
 			wantStatus: http.StatusNotFound,
@@ -166,7 +166,7 @@ func TestGetOne_Error(t *testing.T) {
 					"2021-09-01T00:00:00Z",
 					"2021-09-01T00:00:00Z",
 				)
-				mock.ExpectQuery(cGetStmt).WithArgs("1").WillReturnRows(row)
+				mock.ExpectQuery(cGetOneStmt).WithArgs("1").WillReturnRows(row)
 				return db, err
 			},
 			wantStatus: http.StatusNotFound,

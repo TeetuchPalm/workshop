@@ -15,8 +15,8 @@ type Currency string
 const (
 	THBCurrency Currency = "THB"
 
-	cGetStmt = "SELECT * FROM cloud_pockets WHERE id = $1"
-	cID      = "id"
+	cGetOneStmt = "SELECT * FROM pockets WHERE id = $1"
+	cID         = "id"
 )
 
 var (
@@ -45,7 +45,7 @@ func (h *handler) GetOne(c echo.Context) error {
 	var createdAt string
 	var updatedAt string
 	var deletedAt *string
-	if err := h.db.QueryRowContext(ctx, cGetStmt, pocketID).Scan(
+	if err := h.db.QueryRowContext(ctx, cGetOneStmt, pocketID).Scan(
 		&pocket.ID,
 		&pocket.Name,
 		&pocket.Category,
