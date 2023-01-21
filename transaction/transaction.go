@@ -1,7 +1,6 @@
 package transaction
 
 import (
-	"math/big"
 	"time"
 
 	cpk "github.com/kkgo-software-engineering/workshop/cloud_pocket"
@@ -28,7 +27,7 @@ type Transaction struct {
 	SourcePocketID      int               `json:"sourcePocketId"`
 	DestinationPocketID int               `json:"destinationPocketId"`
 	Description         string            `json:"description"`
-	Amount              big.Float         `json:"amount"`
+	Amount              float64           `json:"amount"`
 	Currency            cpk.Currency      `json:"currency"`
 	CreatedAt           time.Time         `json:"createdAt"`
 }
