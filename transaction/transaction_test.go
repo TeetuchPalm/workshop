@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/kkgo-software-engineering/workshop/cloud_pocket"
+	"github.com/kkgo-software-engineering/workshop/pocket"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -72,7 +72,7 @@ func TestGetTransactionByPocketId(t *testing.T) {
 	assert.Equal(t, 2, rt[0].DestinationPocketID)
 	assert.Equal(t, "", rt[0].Description)
 	assert.Equal(t, float64(10), rt[0].Amount)
-	assert.Equal(t, cloud_pocket.Currency("THB"), rt[0].Currency)
+	assert.Equal(t, pocket.Currency("THB"), rt[0].Currency)
 	assert.Equal(t, ti, rt[0].CreatedAt)
 
 }
