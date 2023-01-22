@@ -23,6 +23,17 @@ func SeedTransactions(t *testing.T, db *sql.DB) int64 {
 	return id
 }
 
+func SeedPocket(t *testing.T, db *sql.DB) int64 {
+	stmt, err := db.Prepare(`INSERT INTO pockets (name, category, amount, goal, currency, createdAt, updatedAt) VALUES ('demoPocket', 'test', 100, 20000.02, 'THB', '2021-09-01T00:00:00Z', '2021-09-01T00:00:00Z') RETURNING id`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	row := stmt.QueryRow()
+	var id int64
+	row.Scan(&id)
+	return id
+}
+
 func InitTestDb(t *testing.T) *sql.DB {
 	cfg := config.New().All()
 	db, err := sql.Open("postgres", cfg.DBConnection)

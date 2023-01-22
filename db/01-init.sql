@@ -18,14 +18,14 @@ CREATE TABLE IF NOT EXISTS "transactions" (
     "createdat" TIMESTAMP
 );
 
--- CREATE TABLE IF NOT EXISTS pockets(
---                     id SERIAL PRIMARY KEY,
--- 					`type` TEXT,
--- 					`status` FLOAT,
--- 					souecePocketId TEXT,
--- 					destinationPocketID TEXT,
---                     `description` TEXT,
---                     amount FLOAT,
---                     currency TEXT,
---                     createdAt timestamp,
---                     );
+CREATE TABLE IF NOT EXISTS "pockets"(
+    "id" SERIAL PRIMARY KEY,
+    "name" TEXT,
+    "category" TEXT,
+    "amount" FLOAT,
+    "goal" FLOAT,
+    "currency" TEXT,
+    "createdat" TIMESTAMP,
+    "updatedat" TIMESTAMP,
+    "deletedat" TIMESTAMP
+);
