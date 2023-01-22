@@ -73,27 +73,48 @@ func (h *handler) Transfer(c echo.Context) error {
 	pocket.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
 	pocket.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAt)
 
-	// update to each pocket
-	if t.Amount.Cmp(pocket.Amount) == -1 {
+	query := "SELECT amount FROM pockets WHERE id = $1"
+	stmt, err := h.db.Prepare(query)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
+	}
+	row := stmt.QueryRow(t.SourcePocketID)
+	var am string
+	err = row.Scan(&am)
 
-		query := "Update pockets set amount = amount-$2, updatedAt = $3 where id = $1"
+	query = "SELECT amount FROM pockets WHERE id = $1"
+	stmt, err = h.db.Prepare(query)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
+	}
+	row = stmt.QueryRow(t.DestinationPocketID)
+	var amd string
+	err = row.Scan(&amd)
+
+	// update to each pocket
+	if t.Amount.Cmp(pocket.Amount) == -1 || t.Amount.Cmp(pocket.Amount) == 0 {
+
+		query := "Update pockets set amount = $2, updatedAt = $3 where id = $1"
 		stmt, err := h.db.Prepare(query)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 		}
-		if _, err := stmt.Exec(t.SourcePocketID, t.Amount, time.Now()); err != nil {
+		sum, err := decimal.NewFromString(am)
+		if _, err := stmt.Exec(t.SourcePocketID, sum.Add(t.Amount.Neg()).String(), time.Now()); err != nil {
 			return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 		}
-		query = "Update pockets set amount = amount+$2, updatedAt = $3 where id = $1"
+
+		query = "Update pockets set amount = $2, updatedAt = $3 where id = $1"
 		stmt, err = h.db.Prepare(query)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 		}
-		if _, err := stmt.Exec(t.DestinationPocketID, t.Amount, time.Now()); err != nil {
+		sum2, err := decimal.NewFromString(amd)
+		if _, err := stmt.Exec(t.DestinationPocketID, sum2.Add(t.Amount).String(), time.Now()); err != nil {
 			return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 		}
 		query = `INSERT INTO transactions (type, status, amount, sourcePocketId, destinationPocketId, description, currency, createdAt) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
-		row := h.db.QueryRow(query, TransferTransactionType, SuccessTransactionStatus, t.Amount.String(), t.SourcePocketID, t.DestinationPocketID, t.Description, t.Currency, time.Now())
+		row = h.db.QueryRow(query, TransferTransactionType, SuccessTransactionStatus, t.Amount, t.SourcePocketID, t.DestinationPocketID, t.Description, t.Currency, time.Now())
 		err = row.Scan(&t.ID)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
