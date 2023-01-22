@@ -13,6 +13,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/kkgo-software-engineering/workshop/pocket"
 	"github.com/labstack/echo/v4"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,6 +31,7 @@ func TestGetTransactionByPocketId(t *testing.T) {
 	var mock sqlmock.Sqlmock
 	var err error
 	ti, _ := time.Parse("2021-09-01T00:00:00Z", "2001-09-28T01:00:00Z")
+	amount, _ := decimal.NewFromString("10.00")
 	md := Transaction{
 		ID:                  1,
 		Type:                "deposit",
@@ -37,7 +39,7 @@ func TestGetTransactionByPocketId(t *testing.T) {
 		SourcePocketID:      1,
 		DestinationPocketID: 2,
 		Description:         "",
-		Amount:              10.00,
+		Amount:              amount,
 		Currency:            "THB",
 		CreatedAt:           ti,
 	}
@@ -71,7 +73,7 @@ func TestGetTransactionByPocketId(t *testing.T) {
 	assert.Equal(t, 1, rt[0].SourcePocketID)
 	assert.Equal(t, 2, rt[0].DestinationPocketID)
 	assert.Equal(t, "", rt[0].Description)
-	assert.Equal(t, float64(10), rt[0].Amount)
+	assert.Equal(t, "10", rt[0].Amount.String())
 	assert.Equal(t, pocket.Currency("THB"), rt[0].Currency)
 	assert.Equal(t, ti, rt[0].CreatedAt)
 

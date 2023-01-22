@@ -6,6 +6,7 @@ import (
 
 	"github.com/kkgo-software-engineering/workshop/pocket"
 	"github.com/labstack/echo/v4"
+	"github.com/shopspring/decimal"
 )
 
 type (
@@ -33,7 +34,7 @@ type Transaction struct {
 	SourcePocketID      int               `json:"sourcePocketId"`
 	DestinationPocketID int               `json:"destinationPocketId"`
 	Description         string            `json:"description"`
-	Amount              float64           `json:"amount"`
+	Amount              decimal.Decimal   `json:"amount"`
 	Currency            pocket.Currency   `json:"currency"`
 	CreatedAt           time.Time         `json:"createdAt"`
 }
@@ -48,6 +49,8 @@ func (h *handler) Transfer(c echo.Context) error {
 	// get from source pocket
 	ctx := c.Request().Context()
 	pocket := pocket.Pocket{}
+	var amount string
+	var goal string
 	var createdAt string
 	var updatedAt string
 	var deletedAt *string
@@ -55,8 +58,8 @@ func (h *handler) Transfer(c echo.Context) error {
 		&pocket.ID,
 		&pocket.Name,
 		&pocket.Category,
-		&pocket.Amount,
-		&pocket.Goal,
+		&amount,
+		&goal,
 		&pocket.Currency,
 		&createdAt,
 		&updatedAt,
@@ -65,11 +68,13 @@ func (h *handler) Transfer(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, Err{Message: err.Error()})
 	}
 
+	pocket.Amount, _ = decimal.NewFromString(amount)
+	pocket.Goal, _ = decimal.NewFromString(goal)
 	pocket.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
 	pocket.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAt)
 
 	// update to each pocket
-	if pocket.Amount >= t.Amount {
+	if t.Amount.Cmp(pocket.Amount) == -1 {
 
 		query := "Update pockets set amount = amount-$2, updatedAt = $3 where id = $1"
 		stmt, err := h.db.Prepare(query)
@@ -88,7 +93,7 @@ func (h *handler) Transfer(c echo.Context) error {
 			return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 		}
 		query = `INSERT INTO transactions (type, status, amount, sourcePocketId, destinationPocketId, description, currency, createdAt) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
-		row := h.db.QueryRow(query, TransferTransactionType, SuccessTransactionStatus, t.Amount, t.SourcePocketID, t.DestinationPocketID, t.Description, t.Currency, time.Now())
+		row := h.db.QueryRow(query, TransferTransactionType, SuccessTransactionStatus, t.Amount.String(), t.SourcePocketID, t.DestinationPocketID, t.Description, t.Currency, time.Now())
 		err = row.Scan(&t.ID)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
@@ -96,7 +101,7 @@ func (h *handler) Transfer(c echo.Context) error {
 		return c.JSON(http.StatusCreated, t)
 	} else {
 		query := `INSERT INTO transactions (type, status, amount, sourcePocketId, destinationPocketId, description, currency, createdAt) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
-		row := h.db.QueryRow(query, TransferTransactionType, FailedTransactionStatus, t.Amount, t.SourcePocketID, t.DestinationPocketID, t.Description, t.Currency, time.Now())
+		row := h.db.QueryRow(query, TransferTransactionType, FailedTransactionStatus, t.Amount.String(), t.SourcePocketID, t.DestinationPocketID, t.Description, t.Currency, time.Now())
 		err = row.Scan(&t.ID)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})

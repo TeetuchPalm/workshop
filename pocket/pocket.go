@@ -10,6 +10,7 @@ import (
 
 	"github.com/kkgo-software-engineering/workshop/mlog"
 	"github.com/labstack/echo/v4"
+	"github.com/shopspring/decimal"
 	"go.uber.org/zap"
 )
 
@@ -38,15 +39,15 @@ type Err struct {
 }
 
 type Pocket struct {
-	ID        int        `json:"id" pg:"pk,unique"`
-	Name      string     `json:"name"`
-	Category  string     `json:"category"`
-	Amount    float64    `json:"amount"`
-	Goal      float64    `json:"goal"`
-	Currency  Currency   `json:"currency"`
-	CreatedAt time.Time  `json:"createdAt"`
-	UpdatedAt time.Time  `json:"updatedAt"`
-	DeletedAt *time.Time `json:"-"`
+	ID        int             `json:"id" pg:"pk,unique"`
+	Name      string          `json:"name"`
+	Category  string          `json:"category"`
+	Amount    decimal.Decimal `json:"amount"`
+	Goal      decimal.Decimal `json:"goal"`
+	Currency  Currency        `json:"currency"`
+	CreatedAt time.Time       `json:"createdAt"`
+	UpdatedAt time.Time       `json:"updatedAt"`
+	DeletedAt *time.Time      `json:"-"`
 }
 
 type handler struct {
@@ -65,13 +66,15 @@ func (h *handler) GetOne(c echo.Context) error {
 	pocket := Pocket{}
 	var createdAt string
 	var updatedAt string
+	var amount string
+	var goal string
 	var deletedAt *string
 	if err := h.db.QueryRowContext(ctx, cGetOneStmt, pocketID).Scan(
 		&pocket.ID,
 		&pocket.Name,
 		&pocket.Category,
-		&pocket.Amount,
-		&pocket.Goal,
+		&amount,
+		&goal,
 		&pocket.Currency,
 		&createdAt,
 		&updatedAt,
@@ -88,6 +91,8 @@ func (h *handler) GetOne(c echo.Context) error {
 
 	pocket.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
 	pocket.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAt)
+	pocket.Amount, _ = decimal.NewFromString(amount)
+	pocket.Goal, _ = decimal.NewFromString(goal)
 
 	return c.JSON(http.StatusOK, pocket)
 }
@@ -100,7 +105,7 @@ func (h *handler) CreatePocket(c echo.Context) error {
 	}
 	log.Println(pocket)
 	query := "INSERT INTO pockets (name, category, amount, goal, currency, createdat, updatedAt) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id"
-	row := h.db.QueryRow(query, pocket.Name, pocket.Category, pocket.Amount, pocket.Goal, pocket.Currency, time.Now(), time.Now())
+	row := h.db.QueryRow(query, pocket.Name, pocket.Category, pocket.Amount.String(), pocket.Goal.String(), pocket.Currency, time.Now(), time.Now())
 	err = row.Scan(&pocket.ID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
@@ -149,7 +154,14 @@ func (h *handler) Get(c echo.Context) error {
 
 	for rows.Next() {
 		ex := Pocket{}
-		err := rows.Scan(&ex.ID, &ex.Name, &ex.Category, &ex.Amount, &ex.Goal, &ex.Currency)
+
+		var amount string
+		var goal string
+
+		err := rows.Scan(&ex.ID, &ex.Name, &ex.Category, &amount, &goal, &ex.Currency)
+
+		ex.Amount, _ = decimal.NewFromString(amount)
+		ex.Goal, _ = decimal.NewFromString(goal)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}

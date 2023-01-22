@@ -21,7 +21,7 @@ func TestITGetTransactionByPocketId(t *testing.T) {
 	handler := New(db)
 
 	e.GET("/cloud_pockets/:id/transactions", handler.GetTransactionByPocketId)
-	expectedR := `[{"id":1,"type":"deposit","status":"success","sourcePocketId":1,"destinationPocketId":2,"description":"","amount":10,"currency":"THB","createdAt":"2021-09-01T00:00:00Z"}]`
+	expectedR := `[{"id":1,"type":"deposit","status":"success","sourcePocketId":1,"destinationPocketId":2,"description":"","amount":"10","currency":"THB","createdAt":"2021-09-01T00:00:00Z"}]`
 
 	//action
 	req := httptest.NewRequest(http.MethodGet, "/cloud_pockets/1/transactions", nil)
