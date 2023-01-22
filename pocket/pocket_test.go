@@ -4,6 +4,7 @@ package pocket
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -13,8 +14,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
-
-const endpoint = "/cloud_pocket"
 
 func TestGetOne(t *testing.T) {
 	testcases := []struct {
@@ -74,7 +73,7 @@ func TestGetOne(t *testing.T) {
 
 	for _, tc := range testcases {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodGet, endpoint, strings.NewReader(tc.reqBody))
+		req := httptest.NewRequest(http.MethodGet, "/cloud-pockets", strings.NewReader(tc.reqBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
@@ -175,7 +174,7 @@ func TestGetOne_Error(t *testing.T) {
 
 	for _, tc := range testcases {
 		e := echo.New()
-		req := httptest.NewRequest(http.MethodGet, endpoint, strings.NewReader(tc.reqBody))
+		req := httptest.NewRequest(http.MethodGet, "/cloud-pockets", strings.NewReader(tc.reqBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
@@ -191,4 +190,46 @@ func TestGetOne_Error(t *testing.T) {
 			assert.Equal(t, tc.wantStatus, rec.Code)
 		}
 	}
+}
+
+func TestGetAll(t *testing.T) {
+	e := echo.New()
+	var mock sqlmock.Sqlmock
+	db, mock, _ := sqlmock.New()
+	expect := []GetResponse{
+		{
+			ID:       1,
+			Name:     "travel",
+			Category: "Travel",
+			Amount:   100,
+			Goal:     10_000,
+			Currency: THBCurrency,
+		},
+		{
+			ID:       2,
+			Name:     "iPhone",
+			Category: "Gedged",
+			Amount:   100,
+			Goal:     40_000,
+			Currency: THBCurrency,
+		},
+	}
+	row := sqlmock.NewRows([]string{"ID", "Name", "Category", "Amount", "Goal", "Currency"}).
+		AddRow(1, "travel", "Travel", float64(100), float64(10_000), "THB").
+		AddRow(2, "iPhone", "Gedged", float64(100), float64(40_000), "THB")
+
+	mock.ExpectPrepare("SELECT id , name , category , amount , goal , currency FROM pockets").ExpectQuery().WithArgs().WillReturnRows(row)
+
+	req := httptest.NewRequest(http.MethodGet, "/cloud-pockets", nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	h := New(db)
+	actual := make([]GetResponse, 0)
+
+	assert.NoError(t, h.Get(c))
+	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &actual))
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, expect, actual)
+
 }
