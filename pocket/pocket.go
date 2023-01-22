@@ -107,7 +107,20 @@ func (h *handler) DeletePocket(c echo.Context) error {
 	if id == 0 || err != nil {
 		return c.JSON(http.StatusBadRequest, Err{Message: "invalid id"})
 	}
-	_, err = h.db.Exec("delete from pockets where id = $1", id)
+
+	var deletedAt *string
+	err = h.db.QueryRowContext(c.Request().Context(),
+		"select deletedat from pockets where id = $1", id).Scan(deletedAt)
+
+	if deletedAt != nil {
+		return c.JSON(http.StatusBadRequest, "pocket already deleted")
+	}
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
+	}
+
+	_, err = h.db.Exec("update pockets set deletedat = $2 where id = $1", id, time.Now())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 	}
