@@ -19,8 +19,8 @@ import (
 
 func SetupDB(db *sql.DB) {
 	createTb := `
-	CREATE TABLE IF NOT EXISTS pockets (id SERIAL PRIMARY KEY, name TEXT, category TEXT, amount FLOAT, goal FLOAT, currency TEXT, createdAt TIMESTAMP, updatedAt TIMESTAMP, deletedAt TIMESTAMP);
-	CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, type TEXT, status TEXT, sourcePocketId INT, destinationPocketID INT, description TEXT, amount FLOAT, currency TEXT, createdAt TIMESTAMP);
+	CREATE TABLE IF NOT EXISTS pockets (id SERIAL PRIMARY KEY, name TEXT, category TEXT, amount TEXT, goal TEXT, currency TEXT, createdAt TIMESTAMP, updatedAt TIMESTAMP, deletedAt TIMESTAMP);
+	CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, type TEXT, status TEXT, sourcePocketId INT, destinationPocketID INT, description TEXT, amount TEXT, currency TEXT, createdAt TIMESTAMP);
 	`
 	_, err := db.Exec(createTb)
 
@@ -30,7 +30,7 @@ func SetupDB(db *sql.DB) {
 }
 
 func SeedData(db *sql.DB) {
-	insertTb := `INSERT INTO transactions (type, status, sourcePocketId, destinationPocketID, description, amount, currency, createdAt) SELECT 'deposit', 'success', 1, 2, '', 10.00, 'THB', '2021-09-01T00:00:00Z' WHERE NOT EXISTS (SELECT * FROM transactions)`
+	insertTb := `INSERT INTO transactions (type, status, sourcePocketId, destinationPocketID, description, amount, currency, createdAt) SELECT 'deposit', 'success', 1, 2, '', '10.00', 'THB', '2021-09-01T00:00:00Z' WHERE NOT EXISTS (SELECT * FROM transactions)`
 
 	_, err := db.Exec(insertTb)
 
