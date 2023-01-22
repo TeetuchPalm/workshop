@@ -30,6 +30,10 @@ var (
 	hErrCloudPocketDeleteFailed = echo.NewHTTPError(
 		http.StatusNotFound,
 		"cloud pocket delete failed",
+	)	
+	hErrGetAllFailed = echo.NewHTTPError(
+		http.StatusInternalServerError,
+		"กรุณาติดต่อผู้ดูแลระบบ (RefCode:12)",
 	)
 )
 
@@ -47,6 +51,15 @@ type Pocket struct {
 	CreatedAt time.Time  `json:"createdAt"`
 	UpdatedAt time.Time  `json:"updatedAt"`
 	DeletedAt *time.Time `json:"-"`
+}
+
+type GetResponse struct {
+	ID       int      `json:"id" pg:"pk,unique"`
+	Name     string   `json:"name"`
+	Category string   `json:"category"`
+	Amount   float64  `json:"amount"`
+	Goal     float64  `json:"goal"`
+	Currency Currency `json:"currency"`
 }
 
 type handler struct {
@@ -135,25 +148,30 @@ func (h *handler) DeletePocket(c echo.Context) error {
 }
 
 func (h *handler) Get(c echo.Context) error {
-	stmt, err := h.db.Prepare("SELECT * FROM pocket")
+	logger := mlog.L(c)
+
+	stmt, err := h.db.Prepare("SELECT id , name , category , amount , goal , currency FROM pockets")
 	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+		logger.Error("Can not prepare sql", zap.Error(err))
+		return hErrGetAllFailed
 	}
 
 	rows, err := stmt.Query()
 	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+		logger.Error("Can not query sql", zap.Error(err))
+		return hErrGetAllFailed
 	}
 
-	pocket := []Pocket{}
+	pocket := []GetResponse{}
 
 	for rows.Next() {
-		ex := Pocket{}
-		err := rows.Scan(&ex.ID, &ex.Name, &ex.Category, &ex.Amount, &ex.Goal, &ex.Currency)
+		res := GetResponse{}
+		err := rows.Scan(&res.ID, &res.Name, &res.Category, &res.Amount, &res.Goal, &res.Currency)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, err.Error())
+			logger.Error("Can not scan rows", zap.Error(err))
+			return hErrGetAllFailed
 		}
-		pocket = append(pocket, ex)
+		pocket = append(pocket, res)
 	}
 
 	return c.JSON(http.StatusOK, pocket)
