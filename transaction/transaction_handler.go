@@ -20,12 +20,22 @@ func (h handler) GetTransactionByPocketId(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
+	// row := stmt.QueryRow(id)
 	rows, err := stmt.Query(id)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 	trs := []Transaction{}
 	tr := Transaction{}
+	// err = row.Scan(&tr.ID, &tr.Type, &tr.Status, &tr.SourcePocketID, &tr.DestinationPocketID, &tr.Description, &tr.Amount, &tr.Currency, &tr.CreatedAt)
+	// switch err {
+	// case sql.ErrNoRows:
+	// 	return c.String(http.StatusNotFound, "get empty row.")
+	// case nil:
+	// 	return c.JSON(http.StatusOK, tr)
+	// default:
+	// 	return c.String(http.StatusInternalServerError, err.Error())
+	// }
 	for rows.Next() {
 		err = rows.Scan(&tr.ID, &tr.Type, &tr.Status, &tr.SourcePocketID, &tr.DestinationPocketID, &tr.Description, &tr.Amount, &tr.Currency, &tr.CreatedAt)
 		if err != nil {

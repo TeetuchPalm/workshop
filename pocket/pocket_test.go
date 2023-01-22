@@ -1,6 +1,6 @@
 //go:build unit
 
-package cloud_pocket
+package pocket
 
 import (
 	"database/sql"

@@ -1,4 +1,4 @@
-package cloud_pocket
+package pocket
 
 import (
 	"database/sql"
@@ -25,10 +25,10 @@ func (h handler) Get(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	pocket := []CloudPocket{}
+	pocket := []Pocket{}
 
 	for rows.Next() {
-		ex := CloudPocket{}
+		ex := Pocket{}
 		err := rows.Scan(&ex.ID, &ex.Name, &ex.Category, &ex.Amount, &ex.Goal, &ex.Currency)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())

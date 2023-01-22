@@ -1,7 +1,8 @@
-package cloud_pocket
+package pocket
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -24,7 +25,11 @@ var (
 		"cloud pocket not found")
 )
 
-type CloudPocket struct {
+type Err struct {
+	Message string `json:"message"`
+}
+
+type Pocket struct {
 	ID        int        `json:"id" pg:"pk,unique"`
 	Name      string     `json:"name"`
 	Category  string     `json:"category"`
@@ -41,7 +46,7 @@ func (h *handler) GetOne(c echo.Context) error {
 	ctx := c.Request().Context()
 	pocketID := c.Param(cID)
 
-	pocket := CloudPocket{}
+	pocket := Pocket{}
 	var createdAt string
 	var updatedAt string
 	var deletedAt *string
@@ -69,4 +74,20 @@ func (h *handler) GetOne(c echo.Context) error {
 	pocket.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAt)
 
 	return c.JSON(http.StatusOK, pocket)
+}
+
+func (h *handler) CreatePocket(c echo.Context) error {
+	var pocket Pocket
+	err := c.Bind(&pocket)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
+	}
+	log.Println(pocket)
+	query := "INSERT INTO pockets (name, category, amount, goal, currency, createdat, updatedAt) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id"
+	row := h.db.QueryRow(query, pocket.Name, pocket.Category, pocket.Amount, pocket.Goal, pocket.Currency, time.Now(), time.Now())
+	err = row.Scan(&pocket.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
+	}
+	return c.JSON(http.StatusCreated, pocket)
 }
