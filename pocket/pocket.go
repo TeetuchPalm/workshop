@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/kkgo-software-engineering/workshop/mlog"
@@ -90,4 +91,16 @@ func (h *handler) CreatePocket(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 	}
 	return c.JSON(http.StatusCreated, pocket)
+}
+
+func (h *handler) DeletePocket(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if id == 0 || err != nil {
+		return c.JSON(http.StatusBadRequest, Err{Message: "invalid id"})
+	}
+	_, err = h.db.Exec("delete from pockets where id = $1", id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
+	}
+	return c.NoContent(http.StatusNoContent)
 }
