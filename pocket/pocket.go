@@ -23,8 +23,14 @@ const (
 )
 
 var (
-	hErrCloudPocketNotFound = echo.NewHTTPError(http.StatusNotFound,
-		"cloud pocket not found")
+	hErrCloudPocketNotFound = echo.NewHTTPError(
+		http.StatusNotFound,
+		"cloud pocket not found",
+	)
+	hErrCloudPocketDeleteFailed = echo.NewHTTPError(
+		http.StatusNotFound,
+		"cloud pocket delete failed",
+	)
 )
 
 type Err struct {
@@ -103,27 +109,28 @@ func (h *handler) CreatePocket(c echo.Context) error {
 }
 
 func (h *handler) DeletePocket(c echo.Context) error {
+	logger := mlog.L(c)
 	id, err := strconv.Atoi(c.Param("id"))
 	if id == 0 || err != nil {
-		return c.JSON(http.StatusBadRequest, Err{Message: "invalid id"})
+		logger.Error(fmt.Sprintf("delete pocket invalid id %d", id))
+		return c.JSON(http.StatusBadRequest, hErrCloudPocketDeleteFailed)
 	}
 
-	var deletedAt *string
+	var isDeleted int
 	err = h.db.QueryRowContext(c.Request().Context(),
-		"select deletedat from pockets where id = $1", id).Scan(deletedAt)
-
-	if deletedAt != nil {
-		return c.JSON(http.StatusBadRequest, "pocket already deleted")
-	}
+		"select 1 from pockets where id = $1 and deletedat is null", id).Scan(&isDeleted)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
+		logger.Error(fmt.Sprintf("failed to delete pocket. %s", err.Error()))
+		return c.JSON(http.StatusBadRequest, hErrCloudPocketDeleteFailed)
 	}
 
 	_, err = h.db.Exec("update pockets set deletedat = $2 where id = $1", id, time.Now())
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
+		logger.Error(fmt.Sprintf("failed to delete pocket. %s", err.Error()))
+		return c.JSON(http.StatusInternalServerError, hErrCloudPocketDeleteFailed)
 	}
+
 	return c.NoContent(http.StatusNoContent)
 }
 
