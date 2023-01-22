@@ -14,7 +14,7 @@ type handler struct {
 func New(db *sql.DB) *handler {
 	return &handler{db}
 }
-func (h handler) GetTransactionByPocketId(c echo.Context) error {
+func (h *handler) GetTransactionByPocketId(c echo.Context) error {
 	id := c.Param("id")
 	stmt, err := h.db.Prepare(`SELECT * FROM transactions WHERE sourcePocketId = $1 OR destinationPocketId = $1 ORDER BY id`)
 	if err != nil {

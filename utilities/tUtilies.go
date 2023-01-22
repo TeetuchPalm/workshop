@@ -2,10 +2,6 @@ package utilities
 
 import (
 	"database/sql"
-	"encoding/json"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"testing"
 
 	"github.com/kkgo-software-engineering/workshop/config"
@@ -30,29 +26,4 @@ func InitTestDb(t *testing.T) *sql.DB {
 		t.Fatal(err)
 	}
 	return db
-}
-
-type Response struct {
-	*http.Response
-	err error
-}
-
-func (r *Response) Decode(v interface{}) error {
-	if r.err != nil {
-		return r.err
-	}
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return err
-	}
-
-	return json.Unmarshal(b, v)
-}
-
-func Request(method, uri string, body io.Reader) *Response {
-	req, _ := http.NewRequest(method, uri, body)
-	req.Header.Add("Content-Type", "application/json")
-	client := http.Client{}
-	res, err := client.Do(req)
-	return &Response{res, err}
 }
