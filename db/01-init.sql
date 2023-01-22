@@ -6,17 +6,17 @@ CREATE TABLE "accounts" (
     PRIMARY KEY ("id")
 );
 
--- CREATE TABLE IF NOT EXISTS transactions(
--- 					id SERIAL PRIMARY KEY,
--- 					`type` TEXT,
--- 					`status` FLOAT,
--- 					souecePocketId TEXT,
--- 					destinationPocketID TEXT,
---                     `description` TEXT,
---                     amount FLOAT,
---                     currency TEXT,
---                     createdAt timestamp,
---                     );
+CREATE TABLE IF NOT EXISTS "transactions" (
+    "id" SERIAL PRIMARY KEY,
+    "type" TEXT,
+    "status" TEXT,
+    "sourcepocketid" INT,
+    "destinationpocketid" INT,
+    "description" TEXT,
+    "amount" FLOAT,
+    "currency" TEXT,
+    "createdat" TIMESTAMP
+);
 
 -- CREATE TABLE IF NOT EXISTS pockets(
 --                     id SERIAL PRIMARY KEY,

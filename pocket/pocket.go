@@ -1,6 +1,7 @@
 package pocket
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -40,6 +41,14 @@ type Pocket struct {
 	CreatedAt time.Time  `json:"createdAt"`
 	UpdatedAt time.Time  `json:"updatedAt"`
 	DeletedAt *time.Time `json:"-"`
+}
+
+type handler struct {
+	db *sql.DB
+}
+
+func New(db *sql.DB) *handler {
+	return &handler{db}
 }
 
 func (h *handler) GetOne(c echo.Context) error {
@@ -103,4 +112,29 @@ func (h *handler) DeletePocket(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 	}
 	return c.NoContent(http.StatusNoContent)
+}
+
+func (h *handler) Get(c echo.Context) error {
+	stmt, err := h.db.Prepare("SELECT * FROM pocket")
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	rows, err := stmt.Query()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	pocket := []Pocket{}
+
+	for rows.Next() {
+		ex := Pocket{}
+		err := rows.Scan(&ex.ID, &ex.Name, &ex.Category, &ex.Amount, &ex.Goal, &ex.Currency)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+		pocket = append(pocket, ex)
+	}
+
+	return c.JSON(http.StatusOK, pocket)
 }
